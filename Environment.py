@@ -2,12 +2,9 @@ from random import shuffle
 from queue import Queue
 from MetaData import *
 from Player import *
+from MCPlayer import *
 from Dealer import *
 from tqdm import tqdm
-import math
-import matplotlib.pyplot as plt
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 
 
 class Arena(object):
@@ -145,12 +142,12 @@ class Arena(object):
         # Player's turn
         while True:
             state = player.getState(dealer)
-            episode.append(state)
-            playerAction = player.policy()
+            playerAction = player.policy(state)
+            episode.append((state, playerAction))
             # if playerAction == Action.hit:
             #     self.dealCards(player, 1)
             player.step(state, playerAction, self)
-            # Terminate state
+            # Check for terminate state
             if playerAction == Action.stick:
                 break
             playerPoints = player.calculateFinalPoints()
@@ -159,7 +156,10 @@ class Arena(object):
                 break
         player.showInfo()
         dealer.showInfo()
-        return self._judgeReward(player, dealer), episode
+        reward = self._judgeReward(player, dealer)
+        if isinstance(player, MCPlayer):
+            player.learnEnv(episode, reward)
+        return reward, episode
 
     def recycleGamerCard(self, *gamers):
         if len(gamers) == 0:
@@ -174,7 +174,7 @@ class Arena(object):
         for i in tqdm(range(1, roundNum+1)):
             self._info("\n************* Round %d started *************" % i)
             reward, episode = self.playOnetimeGame(player, dealer)
-            self.episodes.append(episode)
+            self.episodes.append((episode, reward))
             if reward > 0:
                 results[0] += 1
             elif reward < 0:

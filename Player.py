@@ -24,8 +24,8 @@ class Player(Gamer):
             # error state
             return 0, 0, 0, 0
 
-    def naivePolicy(self):
-        if self.calculatePoints() >= 17:
+    def naivePolicy(self, state):
+        if self.calculatePoints() >= 20:
             return Action.stick
         else:
             return Action.hit
@@ -39,5 +39,16 @@ class State:
         self.b_aceNum = b_a_N
         self.r_aceNum = r_a_N
 
+    def __eq__(self, other):
+        assert other and isinstance(other, State)
+        if self.dealer_first_card_value == other.dealer_first_card_value and \
+           self.playerPoints == other.playerPoints and \
+           self.b_aceNum == other.b_aceNum and \
+           self.r_aceNum == other.r_aceNum:
+            return True
+        else:
+            return False
+
     def getRawState(self):
         return self.dealer_first_card_value, self.playerPoints, self.b_aceNum, self.r_aceNum
+

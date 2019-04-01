@@ -2,8 +2,8 @@ from enum import Enum, unique
 
 @unique
 class Action(Enum):
-    stick = 0
-    hit = 1
+    stick = "stick"
+    hit = "hit"
 
 @unique
 class Role(Enum):
