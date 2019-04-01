@@ -54,7 +54,7 @@ class Arena(object):
         for card in cards:
             self.__cardQ.put(card)
 
-    def _dealCards(self, gamer, num):
+    def dealCards(self, gamer, num):
         cards = []
         for _ in range(0, num):
             if not self.__cardQ.empty():
@@ -75,8 +75,8 @@ class Arena(object):
         the outcome – win (reward +1),
         lose (reward -1), or draw (reward 0) – is the player with the largest sum.
         '''
-        playerPoints = player.calculatePoints()
-        dealerPoints = dealer.calculatePoints()
+        playerPoints = player.calculateFinalPoints()
+        dealerPoints = dealer.calculateFinalPoints()
         playerIsBusted = (playerPoints > 21) or (playerPoints < 1)
         dealerIsBusted = (dealerPoints > 21) or (dealerPoints < 1)
         if (playerIsBusted and dealerIsBusted) or playerPoints == dealerPoints:
@@ -126,8 +126,8 @@ class Arena(object):
         # black: True; red: False
         self.cleanArena(player, dealer)
         while True:
-            self._dealCards(dealer, 1)
-            self._dealCards(player, 1)
+            self.dealCards(dealer, 1)
+            self.dealCards(player, 1)
             if player.cards[0][1] and dealer.cards[0][1]:
                 break
             self.recycleGamerCard(dealer, player)
@@ -135,7 +135,7 @@ class Arena(object):
         while True:
             dealerAction = dealer.policy()
             if dealerAction == Action.hit:
-                self._dealCards(dealer, 1)
+                self.dealCards(dealer, 1)
             if dealerAction == Action.stick:
                 break
             dealerPoints = dealer.calculateFinalPoints()
@@ -144,10 +144,13 @@ class Arena(object):
                 break
         # Player's turn
         while True:
-            episode.append(player.getState(dealer))
+            state = player.getState(dealer)
+            episode.append(state)
             playerAction = player.policy()
-            if playerAction == Action.hit:
-                self._dealCards(player, 1)
+            # if playerAction == Action.hit:
+            #     self.dealCards(player, 1)
+            player.step(state, playerAction, self)
+            # Terminate state
             if playerAction == Action.stick:
                 break
             playerPoints = player.calculateFinalPoints()
@@ -169,7 +172,7 @@ class Arena(object):
         results = [0, 0, 0] # player wins rounds, dealer wins rounds, draw rounds
         self.episodes.clear()
         for i in tqdm(range(1, roundNum+1)):
-            self._info("Round %d started..." % i)
+            self._info("\n************* Round %d started *************" % i)
             reward, episode = self.playOnetimeGame(player, dealer)
             self.episodes.append(episode)
             if reward > 0:
