@@ -14,9 +14,7 @@ class Dealer(Gamer):
         return self._cardValue(self.cards[0])
 
     def dealerPolicy(self):
-        dealerPoints = self.calculatePoints()
-        if dealerPoints >= 17:
-            action = Action.stick
+        if self.calculatePoints() >= 17:
+            return Action.stick
         else:
-            action = Action.hit
-        return action
+            return Action.hit

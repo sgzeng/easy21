@@ -25,7 +25,7 @@ class Arena(object):
                   ('J', True),
                   ('Q', True),
                   ("K", True)
-                  ] * 2
+                  ] * 3
     redCards = [('A', False),
                 ('2', False),
                 ('3', False),
@@ -39,7 +39,7 @@ class Arena(object):
                 ('J', False),
                 ('Q', False),
                 ("K", False)
-                ] * 2
+                ] * 1
 
     def __init__(self, display=False):
         self.showDisplay = display
@@ -67,7 +67,7 @@ class Arena(object):
                 self._cardsUsed.clear()
         self._cardsUsed.extend(cards)
         gamer.receive(cards)
-        self._info("Croupier deal %d cards to %s, " % (num, gamer))
+        # self._info("Croupier deal %d cards %s to %s " % (num, cards, gamer))
 
     def _judgeReward(self, player, dealer):
         '''
@@ -131,21 +131,28 @@ class Arena(object):
             if player.cards[0][1] and dealer.cards[0][1]:
                 break
             self.recycleGamerCard(dealer, player)
+        # Dealer's turn
+        while True:
+            dealerAction = dealer.policy()
+            if dealerAction == Action.hit:
+                self._dealCards(dealer, 1)
+            if dealerAction == Action.stick:
+                break
+            dealerPoints = dealer.calculateFinalPoints()
+            dealerIsBusted = (dealerPoints > 100) or (dealerPoints < -100)
+            if dealerIsBusted:
+                break
+        # Player's turn
         while True:
             episode.append(player.getState(dealer))
             playerAction = player.policy()
-            dealerAction = player.policy()
             if playerAction == Action.hit:
-                self._dealCards(player, 2)
-            if dealerAction == Action.hit:
-                self._dealCards(dealer, 2)
-            if playerAction == Action.stick and dealerAction == Action.stick:
+                self._dealCards(player, 1)
+            if playerAction == Action.stick:
                 break
-            playerPoints = player.calculatePoints()
-            dealerPoints = dealer.calculatePoints()
-            playerIsBusted = (playerPoints > 21) or (playerPoints < 1)
-            dealerIsBusted = (dealerPoints > 21) or (dealerPoints < 1)
-            if playerIsBusted or dealerIsBusted:
+            playerPoints = player.calculateFinalPoints()
+            playerIsBusted = (playerPoints > 100 or playerPoints < -100)
+            if playerIsBusted:
                 break
         player.showInfo()
         dealer.showInfo()
@@ -173,7 +180,7 @@ class Arena(object):
                 results[2] += 1
         if showStatistic:
             print("Easy21 played %d rounds in total, draw in %d rounds. \n "
-                  "<Player> %s wins %d rounds, <Dealer> %s wins %d rounds"
+                  "<Player> %s wins %d rounds, <Dealer> %s wins %d rounds\n"
                   "Win rate: %.2f \nLose rate: %.2f"
                   % (i, results[2], player, results[0], dealer, results[1], results[0]/roundNum, results[1]/roundNum))
 

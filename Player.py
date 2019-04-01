@@ -14,7 +14,7 @@ class Player(Gamer):
         return dealer_first_card_value, playerPoints, self.b_aceNum, self.r_aceNum
 
     def naivePolicy(self):
-        if self.calculatePoints() >= 20:
+        if self.calculatePoints() >= 17:
             return Action.stick
         else:
             return Action.hit
